@@ -42,19 +42,10 @@ extension UIImage: ImageLoadable {
     }
 }
 
-final class ImageLoader: BindableObject {
-    let willChange = PassthroughSubject<(), Never>()
+final class ImageLoader: ObservableObject {
+    @Published private(set) var image: UIImage? = nil
     
     private let loadable: ImageLoadable
-    
-    private(set) var image: UIImage? {
-        willSet {
-            if newValue != nil {
-                willChange.send()
-            }
-        }
-    }
-    
     private var cancellable: AnyCancellable?
     
     init(loadable: ImageLoadable) {
@@ -83,7 +74,7 @@ final class ImageLoader: BindableObject {
 }
 
 struct ImageLoadingView: View {
-    @ObjectBinding var imageLoader: ImageLoader
+    @ObservedObject var imageLoader: ImageLoader
     
     init(image: ImageLoadable) {
         imageLoader = ImageLoader(loadable: image)
@@ -161,10 +152,12 @@ let createdPet = Pet(
 )
 
 PlaygroundPage.current.liveView = UIHostingController(rootView:
-    ImageLoadingView(
-        image: decodedPet.image
-//        image: createdPet.image
-    ).aspectRatio(contentMode: .fit)
+    VStack {
+        ImageLoadingView(image: decodedPet.image)
+            .aspectRatio(contentMode: .fit)
+        ImageLoadingView(image: createdPet.image)
+            .aspectRatio(contentMode: .fit)
+    }
 )
 
 // Filler type to pass into `AnyImageLoadable` when decodability is not needed, only equatability
